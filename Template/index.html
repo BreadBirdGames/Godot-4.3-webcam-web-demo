@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>EACGo</title>
+    <title>Godot 4.3 webcam web demo</title>
 </head>
 <body>
 
@@ -39,18 +39,18 @@
     engine.startGame();
 </script>
 
-<canvas id="qr-canvas"></canvas>
-<video id="qr-video"></video>
+<canvas id="canvas"></canvas>
+<video id="video"></video>
 
 <style>
-    #qr-video, #qr-canvas {
+    #video, #canvas {
         position: fixed;
         top: 0;
         left: 0;
         z-index: -10;
     }
 
-    #qr-canvas {
+    #canvas {
         transform: scaleX(-1);
     }
 </style>
@@ -58,7 +58,7 @@
 <script>
     window.godotFunctions = {};
     window.externalator = {
-        video : document.getElementById("qr-video"),
+        video : document.getElementById("video"),
         addGodotFunction: (n,f) => {
             window.godotFunctions[n] = f;
         }
@@ -72,58 +72,31 @@
         }
     });
 
-    import QrScanner from "./qr-scanner.min.js";
-
-    var qrVideo = document.getElementById('qr-video');
-    var qrCanvas = document.getElementById('qr-canvas');
-    var context = qrCanvas.getContext('2d');
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
     var cw = 0;
     var ch = 0;
 
-    qrVideo.addEventListener('play', function() {
-        draw(this,context, qrCanvas);
+    video.addEventListener('play', function() {
+        draw(this,context, canvas);
     }, false);
 
     function draw(v,c) {
         if(v.paused || v.ended) return false;
 
-        cw = qrCanvas.width;
-        ch = qrCanvas.height;
-        qrCanvas.style.width = qrVideo.offsetWidth + "px";
-        qrCanvas.style.height = qrVideo.offsetHeight + "px";
+        cw = canvas.width;
+        ch = canvas.height;
+        canvas.style.width = video.offsetWidth + "px";
+        canvas.style.height = video.offsetHeight + "px";
 
         c.drawImage(v,0,0,parseInt(cw),parseInt(ch));
         setTimeout(draw,20,v,c);
 
         if (godotFunctions.update_camera != null) {
-            godotFunctions.update_camera(qrCanvas.toDataURL());
+            godotFunctions.update_camera(canvas.toDataURL());
         }
     }
-
-    function setResult(result) {
-        godotFunctions.update_qr(result.data);
-    }
-
-    // ####### Web Cam Scanning #######
-
-    const scanner = new QrScanner(qrVideo, result => setResult(result), {
-        onDecodeError: error => {},
-        highlightScanRegion: false,
-        highlightCodeOutline: false,
-    });
-
-    scanner.start().then(() => {
-        // List cameras after the scanner started to avoid listCamera's stream and the scanner's stream being requested
-        // at the same time which can result in listCamera's unconstrained stream also being offered to the scanner.
-        // Note that we can also start the scanner after listCameras, we just have it this way around in the demo to
-        // start the scanner earlier.
-        // QrScanner.listCameras(true).then(cameras => cameras.forEach(camera => {
-        //     const option = document.createElement('option');
-        //     option.value = camera.id;
-        //     option.text = camera.label;
-        //     camList.add(option);
-        // }));
-    });
 </script>
 </body>
 </html>
